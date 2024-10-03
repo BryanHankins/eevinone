@@ -1,0 +1,11 @@
+9/30/2024
+4:07 pm
+Got chromedriver to work, But its a blank page. when its loaded.
+I think I will need to get it trusted so it does not warn me when you try to load it.
+
+So now how can I get all the events loaded in one place there are seven differnt websites.
+
+So I would need mutiple websites scanned at the same time and displayed at the same place
+each would have diffenrt classes and usernames.
+
+When they are displayed

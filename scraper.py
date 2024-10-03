@@ -1,68 +1,71 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+import time
+import os
 
-# Function to scrape events from Eventbrite
+# Set up Selenium WebDriver (Chrome in this example)
+chrome_options = Options()
+chrome_options.add_argument('--headless')  # Run in headless mode (no browser UI)
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument('--no-sandbox')
 
-print('test')
+# Path to your ChromeDriver (make sure to replace with your actual path)
+service = Service("/path/to/chromedriver")
+
+driver = webdriver.Chrome(service=service, options=chrome_options)
+
+# Function to scrape events from Eventbrite using Selenium
 def scrape_eventbrite():
     url = "https://www.eventbrite.com/d/in--evansville/all-events/"
-    response = requests.get(url)
+    driver.get(url)
+    time.sleep(3)  # Wait for the page to fully load
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, "html.parser")
+    soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        events = []
-        for event in soup.find_all("div", class_="eds-event-card-content__primary-content"):
-            event_name = event.find("div", class_="eds-event-card-content__title").text.strip()
-            event_date = event.find("div", class_="eds-event-card-content__sub-title").text.strip()
-            events.append({
-                "name": event_name,
-                "date": event_date,
-                "source": "Eventbrite"
-            })
+    events = []
+    for event in soup.find_all("div", class_="eds-event-card-content__primary-content"):
+        event_name = event.find("div", class_="eds-event-card-content__title").text.strip()
+        event_date = event.find("div", class_="eds-event-card-content__sub-title").text.strip()
+        events.append({
+            "name": event_name,
+            "date": event_date,
+            "source": "Eventbrite"
+        })
 
-        return events
-    else:
-        return []
+    return events
 
-
-
-# Function to scrape events from Downtown Evansville
+# Function to scrape events from Downtown Evansville using Selenium
 def scrape_downtown_evansville():
     url = "https://www.downtownevansville.com/calendar.php?view=month&month=09&day=01&year=2024"
-    response = requests.get(url)
+    driver.get(url)
+    time.sleep(3)  # Wait for the page to fully load
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content, "html.parser")
+    soup = BeautifulSoup(driver.page_source, "html.parser")
 
-        events = []
-        for event in soup.find_all("div", class_="vevent"):
-            event_name = event.find("a", class_="summary").text.strip()
-            event_date = event.find("span", class_="dtstart").text.strip()
-            events.append({
-                "name": event_name,
-                "date": event_date,
-                "source": "Downtown Evansville"
-            })
+    events = []
+    for event in soup.find_all("div", class_="vevent"):
+        event_name = event.find("a", class_="summary").text.strip()
+        event_date = event.find("span", class_="dtstart").text.strip()
+        events.append({
+            "name": event_name,
+            "date": event_date,
+            "source": "Downtown Evansville"
+        })
 
-        return events
-    else:
-        return []
+    return events
 
+# Function to scrape events from Explore Evansville using Selenium
 def scrape_exploreevansville_detailed():
     url = "https://www.exploreevansville.com/events/"
-    
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching data from {url}: {e}")
-        return []
-    
-    soup = BeautifulSoup(response.content, "html.parser")
-    events = []
+    driver.get(url)
+    time.sleep(3)  # Wait for the page to fully load
 
-    # Finding all <div> elements with data-type="events" and other attributes
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+
+    events = []
     for event in soup.find_all('div', {'data-type': 'events'}):
         # Event Title
         title_tag = event.find('div', class_='top-info')
@@ -79,8 +82,8 @@ def scrape_exploreevansville_detailed():
         # Event Date (Month and Day)
         date_container = event.find('span', class_='mini-date-container')
         if date_container:
-            month = date_container.find('span', class_='month').text.strip() if date_container.find('span', class_='month') else 'No Month'
-            day = date_container.find('span', class_='day').text.strip() if date_container.find('span', class_='day') else 'No Day'
+            month = date_container.find('span', class_='month').text.strip() if date_container.find('span', 'month') else 'No Month'
+            day = date_container.find('span', 'day').text.strip() if date_container.find('span', 'day') else 'No Day'
             date = f"{month} {day}"
         else:
             date = 'No Date'
@@ -100,58 +103,69 @@ def scrape_exploreevansville_detailed():
         })
 
     return events
-def get_all_events():
-    events = scrape_exploreevansville_detailed()
-    print("Scraped Events:", events)  # This will print the scraped data in the console
-    return events
-
-# allevents scrapping works!!!
-# def scrape_allevents_in():
-#     url = "https://allevents.in/evansville"
-#     response = requests.get(url)
-
-#     if response.status_code == 200:
-#         soup = BeautifulSoup(response.content, "html.parser")
-
-#         events = []
-#         for event in soup.find_all("li", attrs={"data-link": True}):  # Finding all <li> elements with the data-link attribute
-#             event_link = event['data-link']
-#             event_title_tag = event.find("h3")
-#             event_name = event_title_tag.text.strip() if event_title_tag else "No Title"
-#             event_location_tag = event.find("div", class_="subtitle")
-#             event_location = event_location_tag.text.strip() if event_location_tag else "No Location"
-#             event_date_tag = event.find("div", class_="date")
-#             event_date = event_date_tag.text.strip() if event_date_tag else "No Date"
-
-#             events.append({
-#                 "name": event_name,
-#                 "location": event_location,
-#                 "date": event_date,
-#                 "url": event_link,
-#                 "source": "AllEvents.in"
-#             })
-
-#         return events
-#     else:
-#         return []
-    
-    
 
 # Function to aggregate events from all sources
 def get_all_events():
     eventbrite_events = scrape_eventbrite()
+    downtown_evansville_events = scrape_downtown_evansville()
     exploreevansville_detailed_events = scrape_exploreevansville_detailed()
 
-    downtown_evansville_events = scrape_downtown_evansville()
-    # allevents_events = scrape_allevents_in()
-    exploreevansville_detailed_events = scrape_exploreevansville_detailed()  # New function
-
     # Combine all events into one list
-    all_events = (eventbrite_events + 
-                  downtown_evansville_events  +
-                  exploreevansville_detailed_events)
-    
-    # all_events = (eventbrite_events + explore_evansville_events + 
-    #               downtown_evansville_events + allevents_events +
-    #               exploreevansville_detailed_events)
+    all_events = eventbrite_events + downtown_evansville_events + exploreevansville_detailed_events
+
     return all_events
+
+# Function to generate and write events to an HTML file
+def generate_html(events):
+    html_content = '''
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Events in Evansville</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            .event { margin-bottom: 20px; }
+            .event h2 { margin: 0; font-size: 1.5em; }
+            .event p { margin: 5px 0; }
+        </style>
+    </head>
+    <body>
+        <h1>Events in Evansville</h1>
+    '''
+
+    # Adding each event to the HTML structure
+    for event in events:
+        html_content += f'''
+        <div class="event">
+            <h2>{event['name']}</h2>
+            <p>Date: {event['date']}</p>
+            <p>Location: {event.get('location', 'N/A')}</p>
+            <p>Source: {event['source']}</p>
+            <a href="{event.get('url', '#')}" target="_blank">Event Link</a>
+            <img src="{event.get('image_url', '')}" alt="{event['name']}" width="200">
+        </div>
+        '''
+
+    # Closing HTML tags
+    html_content += '''
+    </body>
+    </html>
+    '''
+
+    # Write HTML to file
+    templates_dir = "templates"
+    if not os.path.exists(templates_dir):
+        os.makedirs(templates_dir)  # Create the templates directory if it doesn't exist
+
+    with open(os.path.join(templates_dir, "events.html"), "w") as file:
+        file.write(html_content)
+
+# Main execution
+if __name__ == "__main__":
+    events = get_all_events()
+    generate_html(events)  # Generate the HTML file with the scraped events
+
+# Clean up and close the driver
+driver.quit()
