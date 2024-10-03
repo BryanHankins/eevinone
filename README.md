@@ -1,0 +1,1 @@
+This is a little web scrapping project I have created with the help of ai. I like to network and for some reason I have to look over 7 seperate websites to find everything good in town. It combines everything in one place
