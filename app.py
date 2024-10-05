@@ -38,10 +38,10 @@ def scrape_downtown_evansville():
         events = []
         for event in soup.find_all("td", class_="fc-event-container"):
             event_name = event.find("a", class_="fc-day-grid-event").text.strip()
-            event_time = event.find("a", class_="fc-time").text.strip() if event.find("a", class_="fc-time") else "N/A"
+            # event_time = event.find("a", class_="fc-time").text.strip() if event.find("a", class_="fc-time") else "N/A"
             events.append({
                 "name": event_name,
-                "time": event_time,
+                # "time": event_time,
                 "source": "Downtown Evansville"
             })
         return events
